@@ -204,7 +204,6 @@ void D_Display (void)
     if (nodrawers)
         return;                    // for comparative timing / profiling
 
-    printf("DISPLAY\n");
     redrawsbar = false;
 
     // change the view size if needed
@@ -351,7 +350,6 @@ void D_DoomLoop (void)
 
     while (1)
     {
-        printf("LOOP\n");
         // frame syncronous IO operations
         I_StartFrame ();
 
@@ -544,13 +542,13 @@ void IdentifyVersion (void)
 #elif 0
     gamemode = commercial;
     D_AddFile ("tnt.wad");
-#elif 1
+#elif 0
     gamemode = retail;
     D_AddFile ("doomu.wad");
 #elif 0
     gamemode = registered;
     D_AddFile ("doom.wad");
-#elif 0
+#elif 1
     gamemode = shareware;
     D_AddFile ("doom1.wad");
 #else

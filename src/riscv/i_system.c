@@ -18,12 +18,12 @@
  * GNU General Public License for more details.
  */
 
-#include <time.h>
 #include <stdarg.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 #include "doomdef.h"
 #include "doomstat.h"
@@ -36,32 +36,26 @@
 
 #include "i_system.h"
 
-
 /* Video controller, used as a time base */
 /* Normally running at 70 Hz, although in 640x480 compat
  * mode, it's 60 Hz so our tick is 15% too slow ... */
-
-
 
 /* Video Ticks tracking */
 static uint16_t vt_last = 0;
 static uint32_t vt_base = 0;
 
-void I_Init(void)
-{
-    //vt_last = video_state[0] & 0xffff;
+void I_Init(void) {
+    // vt_last = video_state[0] & 0xffff;
 }
 
-byte* I_ZoneBase(int* size)
-{
+byte *I_ZoneBase(int *size) {
     /* Give 6M to DOOM */
     *size = 6 * 1024 * 1024;
-    return (byte*)malloc(*size);
+    return (byte *) malloc(*size);
 }
 
-int I_GetTime(void)
-{
-    uint16_t vt_now = (uint64_t)clock() & 0xffff;
+int I_GetTime(void) {
+    uint16_t vt_now = (uint64_t) clock() & 0xffff;
 
     if (vt_now < vt_last)
         vt_base += 65536;
@@ -71,38 +65,36 @@ int I_GetTime(void)
     return (vt_base + vt_now) >> 1;
 }
 
-static void
-I_GetRemoteEvent(void)
-{
+static void I_GetRemoteEvent(void) {
     event_t event;
 
     const char map[] = {
-        KEY_LEFTARROW, // 0
+        KEY_LEFTARROW,  // 0
         KEY_RIGHTARROW, // 1
-        KEY_DOWNARROW, // 2
-        KEY_UPARROW, // 3
-        KEY_RSHIFT, // 4
-        KEY_RCTRL, // 5
-        KEY_RALT, // 6
-        KEY_ESCAPE, // 7
-        KEY_ENTER, // 8
-        KEY_TAB, // 9
-        KEY_BACKSPACE, // 10
-        KEY_PAUSE, // 11
-        KEY_EQUALS, // 12
-        KEY_MINUS, // 13
-        KEY_F1, // 14
-        KEY_F2, // 15
-        KEY_F3, // 16
-        KEY_F4, // 17
-        KEY_F5, // 18
-        KEY_F6, // 19
-        KEY_F7, // 20
-        KEY_F8, // 21
-        KEY_F9, // 22
-        KEY_F10, // 23
-        KEY_F11, // 24
-        KEY_F12, // 25
+        KEY_DOWNARROW,  // 2
+        KEY_UPARROW,    // 3
+        KEY_RSHIFT,     // 4
+        KEY_RCTRL,      // 5
+        KEY_RALT,       // 6
+        KEY_ESCAPE,     // 7
+        KEY_ENTER,      // 8
+        KEY_TAB,        // 9
+        KEY_BACKSPACE,  // 10
+        KEY_PAUSE,      // 11
+        KEY_EQUALS,     // 12
+        KEY_MINUS,      // 13
+        KEY_F1,         // 14
+        KEY_F2,         // 15
+        KEY_F3,         // 16
+        KEY_F4,         // 17
+        KEY_F5,         // 18
+        KEY_F6,         // 19
+        KEY_F7,         // 20
+        KEY_F8,         // 21
+        KEY_F9,         // 22
+        KEY_F10,        // 23
+        KEY_F11,        // 24
+        KEY_F12,        // 25
     };
 
     static byte s_btn = 0;
@@ -112,7 +104,7 @@ I_GetRemoteEvent(void)
     int mdy = 0;
 
     while (1) {
-        //int ch = console_getchar_nowait();
+        // int ch = console_getchar_nowait();
         int ch = -1;
         if (ch == -1)
             break;
@@ -134,10 +126,10 @@ I_GetRemoteEvent(void)
             mupd = true;
         } else if (ch == 0x1f) {
             /* Mouse movement */
-            signed char x = 0;
-            signed char y = 0;
-            //signed char x = console_getchar();
-            //signed char y = console_getchar();
+            signed char x = -1;
+            signed char y = -1;
+            // signed char x = console_getchar();
+            // signed char y = console_getchar();
             mdx += x;
             mdy += y;
             mupd = true;
@@ -158,49 +150,39 @@ I_GetRemoteEvent(void)
     }
 }
 
-void I_StartFrame(void)
-{
+void I_StartFrame(void) {
     /* Nothing to do */
 }
 
-void I_StartTic(void)
-{
+void I_StartTic(void) {
     I_GetRemoteEvent();
 }
 
-ticcmd_t*
-I_BaseTiccmd(void)
-{
+ticcmd_t *I_BaseTiccmd(void) {
     static ticcmd_t emptycmd;
     return &emptycmd;
 }
 
-void I_Quit(void)
-{
+void I_Quit(void) {
     D_QuitNetGame();
     M_SaveDefaults();
     I_ShutdownGraphics();
     exit(0);
 }
 
-byte* I_AllocLow(int length)
-{
-    byte* mem;
-    mem = (byte*)malloc(length);
+byte *I_AllocLow(int length) {
+    byte *mem;
+    mem = (byte *) malloc(length);
     memset(mem, 0, length);
     return mem;
 }
 
-void I_Tactile(int on,
-    int off,
-    int total)
-{
+void I_Tactile(int on, int off, int total) {
     // UNUSED.
     on = off = total = 0;
 }
 
-void I_Error(char* error, ...)
-{
+void I_Error(char *error, ...) {
     va_list argptr;
 
     // Message first.

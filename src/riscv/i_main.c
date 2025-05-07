@@ -19,9 +19,13 @@
 
 #include "doomdef.h"
 #include "d_main.h"
+#include "m_argv.h"
+#include <stdio.h>
 
-int main(void)
+int main(int argc, char *argv[])
 {
+    myargc = argc;
+    myargv = argv;
 	D_DoomMain();
 	return 0;
 }
