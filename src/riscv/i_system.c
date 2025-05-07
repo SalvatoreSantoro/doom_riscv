@@ -18,8 +18,9 @@
  * GNU General Public License for more details.
  */
 
-
+#include <time.h>
 #include <stdarg.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -29,211 +30,194 @@
 
 #include "d_main.h"
 #include "g_game.h"
-#include "m_misc.h"
 #include "i_sound.h"
 #include "i_video.h"
+#include "m_misc.h"
 
 #include "i_system.h"
 
-#include "console.h"
-#include "config.h"
-
 
 /* Video controller, used as a time base */
-	/* Normally running at 70 Hz, although in 640x480 compat
-	 * mode, it's 60 Hz so our tick is 15% too slow ... */
-static volatile uint32_t * const video_state = (void*)(VID_CTRL_BASE);
+/* Normally running at 70 Hz, although in 640x480 compat
+ * mode, it's 60 Hz so our tick is 15% too slow ... */
+
+
 
 /* Video Ticks tracking */
 static uint16_t vt_last = 0;
 static uint32_t vt_base = 0;
 
-
-void
-I_Init(void)
+void I_Init(void)
 {
-	vt_last = video_state[0] & 0xffff;
+    //vt_last = video_state[0] & 0xffff;
 }
 
-
-byte *
-I_ZoneBase(int *size)
+byte* I_ZoneBase(int* size)
 {
-	/* Give 6M to DOOM */
-	*size = 6 * 1024 * 1024;
-	return (byte *) malloc (*size);
+    /* Give 6M to DOOM */
+    *size = 6 * 1024 * 1024;
+    return (byte*)malloc(*size);
 }
 
-
-int
-I_GetTime(void)
+int I_GetTime(void)
 {
-	uint16_t vt_now = video_state[0] & 0xffff;
+    uint16_t vt_now = (uint64_t)clock() & 0xffff;
 
-	if (vt_now < vt_last)
-		vt_base += 65536;
-	vt_last = vt_now;
+    if (vt_now < vt_last)
+        vt_base += 65536;
+    vt_last = vt_now;
 
-	/* TIC_RATE is 35 in theory */
-	return (vt_base + vt_now) >> 1;
+    /* TIC_RATE is 35 in theory */
+    return (vt_base + vt_now) >> 1;
 }
-
 
 static void
 I_GetRemoteEvent(void)
 {
-	event_t event;
+    event_t event;
 
-	const char map[] = {
-		KEY_LEFTARROW,  // 0
-		KEY_RIGHTARROW, // 1
-		KEY_DOWNARROW,  // 2
-		KEY_UPARROW,    // 3
-		KEY_RSHIFT,     // 4
-		KEY_RCTRL,      // 5
-		KEY_RALT,       // 6
-		KEY_ESCAPE,     // 7
-		KEY_ENTER,      // 8
-		KEY_TAB,        // 9
-		KEY_BACKSPACE,  // 10
-		KEY_PAUSE,      // 11
-		KEY_EQUALS,     // 12
-		KEY_MINUS,      // 13
-		KEY_F1,         // 14
-		KEY_F2,         // 15
-		KEY_F3,         // 16
-		KEY_F4,         // 17
-		KEY_F5,         // 18
-		KEY_F6,         // 19
-		KEY_F7,         // 20
-		KEY_F8,         // 21
-		KEY_F9,         // 22
-		KEY_F10,        // 23
-		KEY_F11,        // 24
-		KEY_F12,        // 25
-	};
+    const char map[] = {
+        KEY_LEFTARROW, // 0
+        KEY_RIGHTARROW, // 1
+        KEY_DOWNARROW, // 2
+        KEY_UPARROW, // 3
+        KEY_RSHIFT, // 4
+        KEY_RCTRL, // 5
+        KEY_RALT, // 6
+        KEY_ESCAPE, // 7
+        KEY_ENTER, // 8
+        KEY_TAB, // 9
+        KEY_BACKSPACE, // 10
+        KEY_PAUSE, // 11
+        KEY_EQUALS, // 12
+        KEY_MINUS, // 13
+        KEY_F1, // 14
+        KEY_F2, // 15
+        KEY_F3, // 16
+        KEY_F4, // 17
+        KEY_F5, // 18
+        KEY_F6, // 19
+        KEY_F7, // 20
+        KEY_F8, // 21
+        KEY_F9, // 22
+        KEY_F10, // 23
+        KEY_F11, // 24
+        KEY_F12, // 25
+    };
 
-	static byte s_btn = 0;
+    static byte s_btn = 0;
 
-	boolean mupd = false;
-	int mdx = 0;
-	int mdy = 0;
+    boolean mupd = false;
+    int mdx = 0;
+    int mdy = 0;
 
-	while (1) {
-		int ch = console_getchar_nowait();
-		if (ch == -1)
-			break;
+    while (1) {
+        //int ch = console_getchar_nowait();
+        int ch = -1;
+        if (ch == -1)
+            break;
 
-		boolean msb = ch & 0x80;
-		ch &= 0x7f;
+        boolean msb = ch & 0x80;
+        ch &= 0x7f;
 
-		if (ch < 28) {
-			/* Keyboard special */
-			event.type = msb ? ev_keydown : ev_keyup;
-			event.data1 = map[ch];
-			D_PostEvent(&event);
-		} else if (ch < 31) {
-			/* Mouse buttons */
-			if (msb)
-				s_btn |= (1 << ((ch & 0x7f) - 28));
-			else
-				s_btn &= ~(1 << ((ch & 0x7f) - 28));
-			mupd = true;
-		} else if (ch == 0x1f) {
-			/* Mouse movement */
-			signed char x = console_getchar();
-			signed char y = console_getchar();
-			mdx += x;
-			mdy += y;
-			mupd = true;
-		} else {
-			/* Keyboard normal */
-			event.type = msb ? ev_keydown : ev_keyup;
-			event.data1 = ch;
-			D_PostEvent(&event);
-		}
-	}
+        if (ch < 28) {
+            /* Keyboard special */
+            event.type = msb ? ev_keydown : ev_keyup;
+            event.data1 = map[ch];
+            D_PostEvent(&event);
+        } else if (ch < 31) {
+            /* Mouse buttons */
+            if (msb)
+                s_btn |= (1 << ((ch & 0x7f) - 28));
+            else
+                s_btn &= ~(1 << ((ch & 0x7f) - 28));
+            mupd = true;
+        } else if (ch == 0x1f) {
+            /* Mouse movement */
+            signed char x = 0;
+            signed char y = 0;
+            //signed char x = console_getchar();
+            //signed char y = console_getchar();
+            mdx += x;
+            mdy += y;
+            mupd = true;
+        } else {
+            /* Keyboard normal */
+            event.type = msb ? ev_keydown : ev_keyup;
+            event.data1 = ch;
+            D_PostEvent(&event);
+        }
+    }
 
-	if (mupd) {
-		event.type = ev_mouse;
-		event.data1 = s_btn;
-		event.data2 =   mdx << 2;
-		event.data3 = - mdy << 2;	/* Doom is sort of inverted ... */
-		D_PostEvent(&event);
-	}
+    if (mupd) {
+        event.type = ev_mouse;
+        event.data1 = s_btn;
+        event.data2 = mdx << 2;
+        event.data3 = -mdy << 2; /* Doom is sort of inverted ... */
+        D_PostEvent(&event);
+    }
 }
 
-void
-I_StartFrame(void)
+void I_StartFrame(void)
 {
-	/* Nothing to do */
+    /* Nothing to do */
 }
 
-void
-I_StartTic(void)
+void I_StartTic(void)
 {
-	I_GetRemoteEvent();
+    I_GetRemoteEvent();
 }
 
-ticcmd_t *
+ticcmd_t*
 I_BaseTiccmd(void)
 {
-	static ticcmd_t emptycmd;
-	return &emptycmd;
+    static ticcmd_t emptycmd;
+    return &emptycmd;
 }
 
-
-void
-I_Quit(void)
+void I_Quit(void)
 {
-	D_QuitNetGame();
-	M_SaveDefaults();
-	I_ShutdownGraphics();
-	exit(0);
+    D_QuitNetGame();
+    M_SaveDefaults();
+    I_ShutdownGraphics();
+    exit(0);
 }
 
-
-byte *
-I_AllocLow(int length)
+byte* I_AllocLow(int length)
 {
-	byte*	mem;
-	mem = (byte *)malloc (length);
-	memset (mem,0,length);
-	return mem;
+    byte* mem;
+    mem = (byte*)malloc(length);
+    memset(mem, 0, length);
+    return mem;
 }
 
-
-void
-I_Tactile
-( int on,
-  int off,
-  int total )
+void I_Tactile(int on,
+    int off,
+    int total)
 {
-	// UNUSED.
-	on = off = total = 0;
+    // UNUSED.
+    on = off = total = 0;
 }
 
-
-void
-I_Error(char *error, ...)
+void I_Error(char* error, ...)
 {
-	va_list	argptr;
+    va_list argptr;
 
-	// Message first.
-	va_start (argptr,error);
-	fprintf (stderr, "Error: ");
-	vfprintf (stderr,error,argptr);
-	fprintf (stderr, "\n");
-	va_end (argptr);
+    // Message first.
+    va_start(argptr, error);
+    fprintf(stderr, "Error: ");
+    vfprintf(stderr, error, argptr);
+    fprintf(stderr, "\n");
+    va_end(argptr);
 
-	fflush( stderr );
+    fflush(stderr);
 
-	// Shutdown. Here might be other errors.
-	if (demorecording)
-		G_CheckDemoStatus();
+    // Shutdown. Here might be other errors.
+    if (demorecording)
+        G_CheckDemoStatus();
 
-	D_QuitNetGame ();
-	I_ShutdownGraphics();
+    D_QuitNetGame();
+    I_ShutdownGraphics();
 
-	exit(-1);
+    exit(-1);
 }

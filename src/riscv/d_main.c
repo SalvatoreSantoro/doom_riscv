@@ -204,6 +204,7 @@ void D_Display (void)
     if (nodrawers)
         return;                    // for comparative timing / profiling
 
+    printf("DISPLAY\n");
     redrawsbar = false;
 
     // change the view size if needed
@@ -350,6 +351,7 @@ void D_DoomLoop (void)
 
     while (1)
     {
+        printf("LOOP\n");
         // frame syncronous IO operations
         I_StartFrame ();
 

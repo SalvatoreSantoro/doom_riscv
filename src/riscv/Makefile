@@ -1,11 +1,11 @@
-CROSS ?= riscv-none-embed-
+CROSS ?= /opt/riscv32emb/bin/riscv32-unknown-elf-
 
 CC = $(CROSS)gcc
 OBJCOPY = $(CROSS)objcopy
 SIZE = $(CROSS)size
 ICEPROG = iceprog
 
-CFLAGS=-Wall -O2 -march=rv32im -mabi=ilp32 -ffreestanding -flto -nostartfiles -fomit-frame-pointer -Wl,--gc-section --specs=nano.specs -I..
+CFLAGS=-Wall -O2 -march=rv32im -mabi=ilp32 -flto -fomit-frame-pointer -I..
 
 CFLAGS += \
 	-DNORMALUNIX \
@@ -29,17 +29,13 @@ SOURCES_doom_arch := \
 	i_system.c \
 	i_video.c \
 	s_sound.c \
-	start.S \
-	console.c  \
-	libc_backend.c  \
-	mini-printf.c \
 	$(NULL)
 
 
 all: doom-riscv.bin
 
-doom-riscv.elf: riscv.lds $(addprefix ../,$(SOURCES_doom)) $(SOURCES_doom_arch)
-	$(CC) $(CFLAGS) -Wl,-Bstatic,-T,riscv.lds,--strip-debug -o $@ $(addprefix ../,$(SOURCES_doom)) $(SOURCES_doom_arch)
+doom-riscv.elf: $(addprefix ../,$(SOURCES_doom)) $(SOURCES_doom_arch)
+	$(CC) $(CFLAGS) -Bstatic,-T,--strip-debug -o $@ $(addprefix ../,$(SOURCES_doom)) $(SOURCES_doom_arch)
 	$(SIZE) $@
 
 clean:
