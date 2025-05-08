@@ -23,11 +23,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/time.h>
 #include <time.h>
+#include <wchar.h>
 
-#include "doomdef.h"
+#include "../../../common/sdl_syscalls.h"
+#include "../doomdef.h"
 #include "doomstat.h"
 
+#include "../d_event.h"
 #include "d_main.h"
 #include "g_game.h"
 #include "i_sound.h"
@@ -55,99 +59,26 @@ byte *I_ZoneBase(int *size) {
 }
 
 int I_GetTime(void) {
-    uint16_t vt_now = (uint64_t) clock() & 0xffff;
+    struct timeval tv;
+
+    gettimeofday(&tv, NULL);
+
+    /* TIC_RATE is 35 in theory */
+    uint16_t vt_now = ((((long long) tv.tv_sec) * 1000) + (tv.tv_usec / 1000)) / TICRATE;
 
     if (vt_now < vt_last)
         vt_base += 65536;
     vt_last = vt_now;
 
-    /* TIC_RATE is 35 in theory */
-    return (vt_base + vt_now) >> 1;
+    return (vt_base + vt_now);
 }
 
-static void I_GetRemoteEvent(void) {
-    event_t event;
-
-    const char map[] = {
-        KEY_LEFTARROW,  // 0
-        KEY_RIGHTARROW, // 1
-        KEY_DOWNARROW,  // 2
-        KEY_UPARROW,    // 3
-        KEY_RSHIFT,     // 4
-        KEY_RCTRL,      // 5
-        KEY_RALT,       // 6
-        KEY_ESCAPE,     // 7
-        KEY_ENTER,      // 8
-        KEY_TAB,        // 9
-        KEY_BACKSPACE,  // 10
-        KEY_PAUSE,      // 11
-        KEY_EQUALS,     // 12
-        KEY_MINUS,      // 13
-        KEY_F1,         // 14
-        KEY_F2,         // 15
-        KEY_F3,         // 16
-        KEY_F4,         // 17
-        KEY_F5,         // 18
-        KEY_F6,         // 19
-        KEY_F7,         // 20
-        KEY_F8,         // 21
-        KEY_F9,         // 22
-        KEY_F10,        // 23
-        KEY_F11,        // 24
-        KEY_F12,        // 25
-    };
-
-    static byte s_btn = 0;
-
-    boolean mupd = false;
-    int mdx = 0;
-    int mdy = 0;
-
-    while (1) {
-        // int ch = console_getchar_nowait();
-        int ch = -1;
-        if (ch == -1)
-            break;
-
-        boolean msb = ch & 0x80;
-        ch &= 0x7f;
-
-        if (ch < 28) {
-            /* Keyboard special */
-            event.type = msb ? ev_keydown : ev_keyup;
-            event.data1 = map[ch];
-            D_PostEvent(&event);
-        } else if (ch < 31) {
-            /* Mouse buttons */
-            if (msb)
-                s_btn |= (1 << ((ch & 0x7f) - 28));
-            else
-                s_btn &= ~(1 << ((ch & 0x7f) - 28));
-            mupd = true;
-        } else if (ch == 0x1f) {
-            /* Mouse movement */
-            signed char x = -1;
-            signed char y = -1;
-            // signed char x = console_getchar();
-            // signed char y = console_getchar();
-            mdx += x;
-            mdy += y;
-            mupd = true;
-        } else {
-            /* Keyboard normal */
-            event.type = msb ? ev_keydown : ev_keyup;
-            event.data1 = ch;
-            D_PostEvent(&event);
-        }
-    }
-
-    if (mupd) {
-        event.type = ev_mouse;
-        event.data1 = s_btn;
-        event.data2 = mdx << 2;
-        event.data3 = -mdy << 2; /* Doom is sort of inverted ... */
-        D_PostEvent(&event);
-    }
+static void I_GetRemoteEvents(void) {
+    register event_t *a0 asm("a0") = events;
+    register int *a1 asm("a1") = &eventhead;
+    register int a2 asm("a2") = eventtail;
+    register long syscall_id asm("a7") = SDL_PULL_EVENTS;
+    asm volatile("ecall" : "+r"(a0), "+r"(a1): "r"(a2), "r"(syscall_id) : "memory");
 }
 
 void I_StartFrame(void) {
@@ -155,7 +86,7 @@ void I_StartFrame(void) {
 }
 
 void I_StartTic(void) {
-    I_GetRemoteEvent();
+    I_GetRemoteEvents();
 }
 
 ticcmd_t *I_BaseTiccmd(void) {

@@ -20,9 +20,10 @@
 #include <stdint.h>
 #include <string.h>
 
-#include "doomdef.h"
+#include "../doomdef.h"
 
 #include "../../../common/sdl_syscalls.h"
+#include "../d_event.h"
 #include "i_system.h"
 #include "i_video.h"
 #include "v_video.h"
@@ -37,9 +38,10 @@ void I_InitGraphics(void) {
     register const char *a0 asm("a0") = name;
     register int a1 asm("a1") = SCREENWIDTH;
     register int a2 asm("a2") = SCREENHEIGHT;
+    register size_t a3 asm("a3") = MAXEVENTS;
     register long syscall_id asm("a7") = SDL_INIT;
 
-    asm volatile("ecall" : "+r"(a0) : "r"(a1), "r"(a2), "r"(syscall_id) : "memory");
+    asm volatile("ecall" : "+r"(a0) : "r"(a1), "r"(a2), "r"(a3), "r"(syscall_id) : "memory");
 }
 
 void I_ShutdownGraphics(void) {

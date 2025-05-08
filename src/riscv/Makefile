@@ -5,7 +5,7 @@ OBJCOPY = $(CROSS)objcopy
 SIZE = $(CROSS)size
 ICEPROG = iceprog
 
-CFLAGS=-Wall -O2 -march=rv32im -mabi=ilp32 -flto -fomit-frame-pointer -I..
+CFLAGS=-Wall -O2 -march=rv32im -mabi=ilp32 -flto -fomit-frame-pointer -I/usr/include/SDL2 -I..
 
 CFLAGS += \
 	-DNORMALUNIX \

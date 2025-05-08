@@ -35,6 +35,7 @@ rcsid[] = "$Id: d_net.c,v 1.3 1997/02/03 22:01:47 b1 Exp $";
 #include "doomdef.h"
 #include "doomstat.h"
 
+
 #define NCMD_EXIT               0x80000000
 #define NCMD_RETRANSMIT         0x40000000
 #define NCMD_SETUP              0x20000000
