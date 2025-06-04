@@ -139,6 +139,7 @@ void D_DoAdvanceDemo (void);
 // Events can be discarded if no responder claims them
 //
 event_t         events[MAXEVENTS];
+SDL_Event       sdl_evts[MAXEVENTS];
 int             eventhead;
 int             eventtail;
 

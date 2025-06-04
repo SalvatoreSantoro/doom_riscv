@@ -25,8 +25,9 @@
 #define __D_EVENT__
 
 
+#include "SDL_events.h"
 #include "doomtype.h"
-#include "../../common/sdl_syscalls.h"
+#include "doomdef.h"
 
 
 //
@@ -94,6 +95,8 @@ typedef enum
 extern  event_t         events[MAXEVENTS];
 extern  int             eventhead;
 extern  int             eventtail;
+// SDL events to map from host to doom
+extern  SDL_Event       sdl_evts[MAXEVENTS];
 
 extern  gameaction_t    gameaction;
 

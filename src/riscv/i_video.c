@@ -22,7 +22,6 @@
 
 #include "../doomdef.h"
 
-#include "../../../common/sdl_syscalls.h"
 #include "../d_event.h"
 #include "i_system.h"
 #include "i_video.h"
